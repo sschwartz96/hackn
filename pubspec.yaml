@@ -25,6 +25,8 @@ dependencies:
     sdk: flutter
 
   http: ^0.13.3
+  url_launcher: ^6.0.9
+  oktoast: ^3.0.0
 
 dev_dependencies:
   flutter_test:
