@@ -1,30 +1,43 @@
 import 'package:flutter/material.dart';
-import 'hacker_news.dart' as hnClient;
+import 'package:hackn/story.dart';
+import 'package:oktoast/oktoast.dart';
+import 'custom/list_divider.dart';
+import 'hacker_news.dart';
 
 void main() {
-  runApp(HackNApp());
+  HNClient hnClient = HNClient();
+  runApp(HackNApp(hnClient));
 }
 
 class HackNApp extends StatelessWidget {
-  // This widget is the root of your application.
+  final HNClient hnClient;
+
+  HackNApp(this.hnClient);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'HackN Hacker News Client',
-      theme: ThemeData(
-        primarySwatch: Colors.purple,
-      ),
-      home: FutureBuilder(
-        future: hnClient.fetchTopNews(),
-        builder: (context, AsyncSnapshot<List<int>> snapshot) {
-          if (snapshot.hasData) {
-            return HomePage(title: 'Top Stories', topStories: snapshot.data!);
-          }
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [CircularProgressIndicator()],
-          );
-        },
+    return OKToast(
+      child: MaterialApp(
+        title: 'HackN Hacker News Client',
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          //scaffoldBackgroundColor: Color(0xff252323),
+          primaryColor: Color(0xff252323),
+          primarySwatch: Colors.teal,
+        ),
+        home: FutureBuilder<List<Item>>(
+          future: hnClient.fetchTopNewsItems(),
+          builder: (context, AsyncSnapshot<List<Item>> snapshot) {
+            if (snapshot.hasData) {
+              return HomePage(
+                  title: 'Top Stories', topStories: snapshot.data ?? []);
+            }
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [CircularProgressIndicator()],
+            );
+          },
+        ),
       ),
     );
   }
@@ -37,7 +50,7 @@ class HomePage extends StatefulWidget {
     required this.topStories,
   }) : super(key: key);
 
-  final List<int> topStories;
+  final List<Item> topStories;
   final String title;
 
   @override
@@ -57,16 +70,29 @@ class _HomePageState extends State<HomePage> {
 
   Widget _showNews() {
     return ListView.builder(
-      padding: const EdgeInsets.all(8.0),
-      itemCount: widget.topStories.length,
+      // * 2 - 3 gives us length for dividers
+      itemCount: widget.topStories.length * 2 - 1,
       itemBuilder: (context, i) {
-        return _buildRow(i);
+        if (i % 2 == 0)
+          return _buildRow((i ~/ 2));
+        else
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Center(
+              child: FancyLine(width: MediaQuery.of(context).size.width),
+            ),
+          );
       },
     );
   }
 
   Widget _buildRow(int i) {
-    final id = widget.topStories[i];
-    return Text('$id');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: StoryTile(
+        isComment: false,
+        item: widget.topStories[i],
+      ),
+    );
   }
 }
