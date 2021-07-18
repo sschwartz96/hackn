@@ -8,6 +8,11 @@ class HNClient {
   static const _itemURL =
       "https://hacker-news.firebaseio.com/v0/item/"; // have to add *1234*.json to end
 
+
+  // fetch comments recursively fetches comments and chrildren of comments
+  // returns a list of comments
+  
+
   Future<List<int>> fetchTopNewsIDs(bool forceRefresh) async {
     final resp = await http.get(Uri.parse(_topStoriesURL));
     final List<dynamic> data = jsonDecode(resp.body);
@@ -19,12 +24,13 @@ class HNClient {
 
   Future<List<Item>> fetchTopNewsItems() async {
     final ids = await fetchTopNewsIDs(true);
-    List<String> itemJSONStrings = List.filled(ids.length, '');
-    for (int i = 0; i < ids.length; i++) {
-      final iURL = _itemURL + ids[i].toString() + '.json';
-      final resp = await http.get(Uri.parse(iURL));
-      itemJSONStrings[i] = resp.body;
-    }
+    final results = await Future.wait(ids.map((id) => http.get(Uri.parse(_itemURL + id.toString() + ".json"))));
+    final itemJSONStrings = results.map((r) => r.body).toList();
+    // for (int i = 0; i < ids.length; i++) {
+    //   final iURL = _itemURL + ids[i].toString() + '.json';
+    //   final resp = await http.get(Uri.parse(iURL));
+    //   itemJSONStrings[i] = resp.body;
+    // }
     return compute(jsonStringsToItems, itemJSONStrings);
     //return _jsonStringsToItems(itemJSONStrings);
   }
